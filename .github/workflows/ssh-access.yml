@@ -9,7 +9,7 @@ jobs:
   setup-ssh:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH Server
+      - name: Setup SSH Server dengan User Sudo
         run: |
           sudo apt-get update
           sudo apt-get install -y openssh-server
@@ -20,6 +20,9 @@ jobs:
           # PERHATIAN: Gunakan password yang lebih kuat di lingkungan produksi
           sudo useradd -m -s /bin/bash rudei
           echo 'rudei:${{ secrets.SSH_PASSWORD }}' | sudo chpasswd
+
+          # Memberikan hak sudo pada user rudei tanpa perlu password
+          echo "rudei ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/rudei
           
           # Mengkonfigurasi SSH untuk mengizinkan akses password
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
@@ -52,9 +55,9 @@ jobs:
           echo "Tailscale IP: $TAILSCALE_IP"
           echo "Username: rudei"
           echo "Port: 22"
-          echo "Command: ssh runner@$TAILSCALE_IP"
+          echo "Command: ssh rudei@$TAILSCALE_IP"
           echo ""
-          echo "Jalankan perintah di atas untuk terhubung ke runner"
+          echo "Jalankan perintah di atas untuk terhubung ke rudei"
           echo "Workflow akan tetap berjalan selama 1 jam..."
           echo "================================================"
           
