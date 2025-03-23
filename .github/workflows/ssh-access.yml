@@ -18,8 +18,8 @@ jobs:
           
           # Membuat user dan password untuk SSH
           # PERHATIAN: Gunakan password yang lebih kuat di lingkungan produksi
-          sudo useradd -m -s /bin/bash runner
-          echo 'runner:${{ secrets.SSH_PASSWORD }}' | sudo chpasswd
+          sudo useradd -m -s /bin/bash rudei
+          echo 'rudei:${{ secrets.SSH_PASSWORD }}' | sudo chpasswd
           
           # Mengkonfigurasi SSH untuk mengizinkan akses password
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
@@ -50,7 +50,7 @@ jobs:
           echo "SSH Access Information:"
           echo "================================================"
           echo "Tailscale IP: $TAILSCALE_IP"
-          echo "Username: runner"
+          echo "Username: rudei"
           echo "Port: 22"
           echo "Command: ssh runner@$TAILSCALE_IP"
           echo ""
