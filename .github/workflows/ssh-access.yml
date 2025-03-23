@@ -1,0 +1,64 @@
+name: SSH Access with Tailscale
+
+on: 
+  workflow_dispatch:  # Memungkinkan menjalankan workflow secara manual
+  push:
+    branches: [ main ]  # Atau branch lain yang Anda inginkan
+
+jobs:
+  setup-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH Server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-server
+          sudo systemctl enable ssh
+          sudo systemctl start ssh
+          
+          # Membuat user dan password untuk SSH
+          # PERHATIAN: Gunakan password yang lebih kuat di lingkungan produksi
+          sudo useradd -m -s /bin/bash runner
+          echo 'runner:${{ secrets.SSH_PASSWORD }}' | sudo chpasswd
+          
+          # Mengkonfigurasi SSH untuk mengizinkan akses password
+          sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          
+          # Verifikasi status SSH
+          sudo systemctl status ssh
+
+      - name: Install and Configure Tailscale
+        run: |
+          # Menginstall Tailscale
+          curl -fsSL https://tailscale.com/install.sh | sudo sh
+          
+          # Mengaktifkan Tailscale dengan Auth Key
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }}
+          
+          # Mendapatkan dan menampilkan IP Tailscale
+          TAILSCALE_IP=$(sudo tailscale ip -4)
+          echo "Tailscale IP: $TAILSCALE_IP"
+          echo "TAILSCALE_IP=$TAILSCALE_IP" >> $GITHUB_ENV
+          
+          # Menampilkan informasi status Tailscale
+          sudo tailscale status
+
+      - name: Display Connection Information
+        run: |
+          echo "================================================"
+          echo "SSH Access Information:"
+          echo "================================================"
+          echo "Tailscale IP: $TAILSCALE_IP"
+          echo "Username: runner"
+          echo "Port: 22"
+          echo "Command: ssh runner@$TAILSCALE_IP"
+          echo ""
+          echo "Jalankan perintah di atas untuk terhubung ke runner"
+          echo "Workflow akan tetap berjalan selama 1 jam..."
+          echo "================================================"
+          
+      - name: Keep Runner Active
+        run: |
+          # Menjaga workflow tetap berjalan selama 1 jam
+          sleep 3600
